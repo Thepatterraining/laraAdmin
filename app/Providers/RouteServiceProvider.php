@@ -69,7 +69,7 @@ class RouteServiceProvider extends ServiceProvider
              ->middleware('api')
              ->namespace($this->namespace)
              ->group(base_path('routes/api.php'));
-        $this->requireRoutes('routes');
+        $this->requireRoutes('routes/Api');
     }
 
     /**
@@ -87,6 +87,7 @@ class RouteServiceProvider extends ServiceProvider
                 //文件，加载进来
                 Route::prefix('api')
                 ->middleware('api')
+                ->middleware('jwtCheck')
                 ->namespace($this->namespace)
                 ->group(base_path($path.'/'.$dir));
             }

@@ -34,6 +34,12 @@ class Handler extends ExceptionHandler
      */
     public function report(Exception $exception)
     {
+        if ($exception instanceof ValidaterException) {
+            return $exception->report($exception);
+        }
+        if ($exception instanceof CommonException) {
+            return $exception->report($exception);
+        }
         parent::report($exception);
     }
 
@@ -46,6 +52,12 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        if ($exception instanceof ValidaterException) {
+            return $exception->render();
+        }
+        if ($exception instanceof CommonException) {
+            return  $exception->render();
+        }
         return parent::render($request, $exception);
     }
 }
