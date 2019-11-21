@@ -14,7 +14,7 @@ class RegisterController extends Controller
     protected $rules = [
         'name' => 'required|unique:auth_users',
         'email' => 'required|unique:auth_users',
-        'pwd' => 'required',
+        'password' => 'required',
         'roleIds' => 'nullable'
     ];
 
@@ -23,7 +23,7 @@ class RegisterController extends Controller
         'name.unique' => '用户已注册！',
         'email.required' => '邮箱必填！',
         'email.unique' => '邮箱已注册！',
-        'pwd.required' => '密码必填！',
+        'password.required' => '密码必填！',
     ];
 
     /**

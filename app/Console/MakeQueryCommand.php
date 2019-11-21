@@ -92,8 +92,10 @@ class MakeQueryCommand extends GeneratorCommand
             }
         }
 
+        $modelArr = explode('\\',$modelClass);
         return array_merge($replace, [
             'DummyFullModelClass' => $modelClass,
+            'ModelName' => $modelArr[count($modelArr) - 1],
         ]);
     }
 

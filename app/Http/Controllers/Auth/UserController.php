@@ -1,13 +1,14 @@
 <?php
 
-namespace DummyNamespace;
+namespace App\Http\Controllers\Auth;
 
 use Illuminate\Http\Request;
-use DummyRootNamespaceHttp\Controllers\QueryList\QueryController;
+use App\Http\Controllers\QueryList\QueryController;
 use App\Exceptions\CommonException;
-use DummyFullModelClass;
+use App\Models\Auth\UserModel;
+use App\Models\Sys\ErrorModel;
 
-class DummyClass extends QueryController
+class UserController extends QueryController
 {
     /**
      * 字典数组
@@ -32,7 +33,7 @@ class DummyClass extends QueryController
 
 
     protected function getModel() {
-        return new ModelName;
+        return new UserModel();
     }
 
     /*
@@ -52,20 +53,6 @@ class DummyClass extends QueryController
     }
 
     /**
-     * 创建
-     * @route post.api/info
-     */
-    function createInfo(Request $request) {
-        try{
-            //创建
-            $this->create($request->all());
-            return $this->success(true);
-        }catch(Exception $ex) {
-
-        }
-    }
-
-    /**
      * 更新
      * @route put.api/info/{id}
      */
@@ -75,7 +62,7 @@ class DummyClass extends QueryController
             $detail = $this->getModel()->find($id);
             if (empty($detail)) {
                 //补充错误信息
-                throw new CommonException();
+                throw new CommonException(ErrorModel::USER_NOT_FOUND);
             }
             //更新
             $this->update($id,$request->all());
@@ -103,7 +90,7 @@ class DummyClass extends QueryController
             $detail = $this->getModel()->find($request->id);
             if (empty($detail)) {
                 //补充错误信息
-                throw new CommonException();
+                throw new CommonException(ErrorModel::USER_NOT_FOUND);
             }
             return $this->success($detail);
         }catch(Exception $ex) {
@@ -122,7 +109,7 @@ class DummyClass extends QueryController
             $detail = $model->find($id);
             if (empty($detail)) {
                 //补充错误信息
-                throw new CommonException();
+                throw new CommonException(ErrorModel::USER_NOT_FOUND);
             }
             //进行删除
             $res = $model->where('id', $id)->delete();

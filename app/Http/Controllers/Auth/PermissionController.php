@@ -1,13 +1,14 @@
 <?php
 
-namespace DummyNamespace;
+namespace App\Http\Controllers\Auth;
 
-use Illuminate\Http\Request;
-use DummyRootNamespaceHttp\Controllers\QueryList\QueryController;
 use App\Exceptions\CommonException;
-use DummyFullModelClass;
+use App\Http\Controllers\QueryList\QueryController;
+use Illuminate\Http\Request;
+use App\Models\Auth\PermissionModel;
+use Illuminate\Support\Arr;
 
-class DummyClass extends QueryController
+class PermissionController extends QueryController
 {
     /**
      * 字典数组
@@ -32,7 +33,7 @@ class DummyClass extends QueryController
 
 
     protected function getModel() {
-        return new ModelName;
+        return new PermissionModel;
     }
 
     /*
@@ -41,14 +42,68 @@ class DummyClass extends QueryController
      */
     public function getList(Request $request){
         try{
-            //检查页码，搜索条件等
-            $this->pageValid();
-            //返回数据
-            return $this->success($this->pageList());
+            $where = [
+                'type' => 'menu',
+                'parent_id' => 0,
+            ];
+            $datas = PermissionModel::where($where)->get();
+            $datas = $this->transTree($datas);
+            return $this->success(['data'=>$datas]);
         } catch (Exception $ex) {
 
         }
 
+    }
+
+    /**
+     * 转换成树形结构
+     */
+    public function transTree($tree) {
+        foreach($tree as $index => $data) {
+            //查询它的子菜单
+            $childrens = PermissionModel::whereParentId($data->id)->get();
+            if (!$childrens->isEmpty()) {
+                $data->children = $childrens;
+                $this->transTree($childrens);
+            }
+        }
+        return $tree;
+    }
+
+    /**
+     * 获取菜单的树形结构
+     */
+    public function getTreeList(Request $request) {
+        $datas = PermissionModel::where('type','menu')->get();
+        $trees = [];
+        foreach($datas as &$data) {
+            $trees[intval($data->id)] = ['key' => $data->id, 'id' => $data->id, 'name' => $data->name, 'parentId' => $data->parent_id, 'created_at' => $data->created_at];
+        }
+        // dd($trees);
+        foreach($trees as $tree) {
+            // dd($tree);
+            $parentIdArr = explode('/',$tree['parentId']);
+            $parentId = last($parentIdArr);
+            // dd($data);
+            $trees[intval($parentId)]['children'][intval($tree['key'])] = &$trees[$tree['key']];
+        }
+        $res = [];
+        foreach ($trees[0]['children'] as $children) {
+            $res[] = $children;
+        }
+        return $this->success($res);
+    }
+
+    /**
+     * 获取菜单的树形结构
+     */
+    public function getTree(Request $request) {
+        $trees = PermissionModel::where('type','menu')->get();
+        $res = [];
+        foreach($trees as $tree) {
+            $res[] = ['key'=>$tree->id, 'value'=>$tree->id, 'title'=>$tree->name, 'id' => $tree->id, 'pId' => $tree->parent_id];
+        }
+        return $this->success($res);
     }
 
     /**

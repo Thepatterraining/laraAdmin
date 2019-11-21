@@ -11,6 +11,9 @@ use App\Http\Controllers\QueryList\Filters\WithJoins;
 use App\Http\Controllers\QueryList\Filters\WithOrderBy;
 use App\Http\Models\Admin\TypeDetailModel;
 use App\Http\Utils\Errors;
+use App\Http\Utils\Utils;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class QueryController extends Controller implements WithWheres
 {
@@ -75,16 +78,16 @@ class QueryController extends Controller implements WithWheres
     protected function pageValid() {
         //检测页码和每页数量
         $rules = [
-            'page'=>'required',
+            'pageIndex'=>'required',
             'pageSize'=>'required',
         ];
         $messages = [
-            'page.required'=>'页码为必填项',
+            'pageIndex.required'=>'页码为必填项',
             'pageSize.required'=>'每页数量为必填项',
         ];
-        $this->valid($this->request, $rules, $messages);
+        $this->valid($rules, $messages);
         //检测通过把页码和每页数量赋值
-        $this->pageIndex = $this->request->input('page');
+        $this->pageIndex = $this->request->input('pageIndex');
         $this->pageSize = $this->request->input('pageSize');
 
         //搜索条件
@@ -104,11 +107,11 @@ class QueryController extends Controller implements WithWheres
                 if (array_key_exists($col,$this->filedsAdapter)) {
                     $where[$this->filedsAdapter[$col]] = $key;
                 } else {
-                    $where[snake_case($col)] = $key;
+                    $where[Str::snake($col)] = $key;
                 }
             }
         }
-        
+
         return $where;
     }
 
@@ -116,11 +119,11 @@ class QueryController extends Controller implements WithWheres
      * [$key=>$value] = where($key, $value)
      * [$key=>['like',$value]] = where($key, 'like', "%$value%")
      * [$key=>['<|<=|>|>=|=|!='], $value] = where($key, '<|<=|>|>=|=|!=', $value)
-     * 
+     *
      * [$key=>['or',$key]] = orWhere($key, $value)
      * [$key=>['or', ['like',$value]]] = orWhere($key, 'like', "%$value%")
      * [$key=>['or',['<|<=|>|>=|=|!=', $value]] = orWhere($key, '<|<=|>|>=|=|!=', $value)
-     * 
+     *
      */
     private function getQueryable():void {
         $tempSql = $this->getModel();
@@ -202,7 +205,7 @@ class QueryController extends Controller implements WithWheres
                                 $data->$col = ['code' => '000000', 'name' => $data->$col];
                             }
                         }
-                        
+
                     }
                 }
             }
@@ -212,13 +215,14 @@ class QueryController extends Controller implements WithWheres
     private function result():array {
         $pageIndex = $this->pageIndex;
         $pageSize = $this->pageSize;
-        $pageCount = ceil($this->count/$pageSize); #计算总页面数 
+        $pageCount = ceil($this->count/$pageSize); #计算总页面数
         $result = [];
         $result['data'] = $this->data;
-        $result['count'] = intval($this->count);
-        $result['page'] = intval($pageIndex);
-        $result['pageSize'] = intval($pageSize);
-        $result['pageCount'] = intval($pageCount);
+        $page['total'] = intval($this->count);
+        $page['pageIndex'] = intval($pageIndex);
+        $page['pageSize'] = intval($pageSize);
+        $page['pageCount'] = intval($pageCount);
+        $result['page'] = $page;
         return $result;
     }
 
@@ -230,7 +234,7 @@ class QueryController extends Controller implements WithWheres
         $pageIndex = $this->pageIndex;
         $pageSize = $this->pageSize;
         $offset = ($pageIndex-1) * $pageSize;
-        
+
         //where条件
         $this->getQueryable();
 
@@ -252,7 +256,7 @@ class QueryController extends Controller implements WithWheres
 
         //处理字典
         $this->dic();
-        
+
         return $this->result();
     }
 
@@ -263,17 +267,17 @@ class QueryController extends Controller implements WithWheres
      */
     function create(array $datas, array $filters = []) {
         $model = $this->getModel();
-        $model->id = getUuid(get_class($this));
+        // $model->id = Utils::getUuid(get_class($this));
         //经过过滤器
-        $filters = array_collapse([$this->filterFields, $filters]);
-        
+        $filters = Arr::collapse([$this->filterFields, $filters]);
+
         //移除过滤器中的字段
-        $datas = array_except($datas, $filters);
+        $datas = Arr::except($datas, $filters);
         foreach ($datas as $key => $val) {
-            if (array_has($this->createAdapter, $key)) {
+            if (Arr::has($this->createAdapter, $key)) {
                 $field = $this->createAdapter[$key];
             } else {
-                $field = snake_case($key);
+                $field = Str::snake($key);
             }
             $model->$field = $val;
         }
@@ -290,14 +294,14 @@ class QueryController extends Controller implements WithWheres
         $model = $this->getModel();
         $data = $model->where('id', $id)->first();
         //经过过滤器
-        $filters = array_collapse([$filters, $this->filterFields]);
+        $filters = Arr::collapse([$filters, $this->filterFields]);
         //移除过滤器中的字段
-        $datas = array_except($datas, $filters);
+        $datas = Arr::except($datas, $filters);
         foreach ($datas as $key => $val) {
-            if (array_has($this->createAdapter, $key)) {
+            if (Arr::has($this->createAdapter, $key)) {
                 $field = $this->createAdapter[$key];
             } else {
-                $field = snake_case($key);
+                $field = Str::snake($key);
             }
             $data->$field = $val;
         }

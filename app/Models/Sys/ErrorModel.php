@@ -10,6 +10,7 @@ class ErrorModel extends BaseModel
 
     const PWD_ERROR = '100001'; //密码错误！
     const ROLE_NOT_FOUND = '100002'; //角色未定义！
+    const USER_NOT_FOUND = '100003'; //用户不存在！
 
 
     const JWT_ERROR = '400003';  //jwt错误

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserModel extends BaseModel
 {
+
     protected $table = 'auth_users';
 
     /**
@@ -39,7 +40,7 @@ class UserModel extends BaseModel
     function add($data) {
         $this->name = $data['name'];
         $this->email = $data['email'];
-        $this->password = $this->getPwd($data['pwd']);
+        $this->password = $this->getPwd($data['password']);
         $this->save();
 
         return $this;

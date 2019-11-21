@@ -7,4 +7,9 @@ use App\Models\BaseModel;
 class RoleModel extends BaseModel
 {
     protected $table = 'auth_roles';
+
+    function add($name) {
+        $this->name = $name;
+        $this->save();
+    }
 }
