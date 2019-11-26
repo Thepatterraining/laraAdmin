@@ -12,6 +12,7 @@ use App\Http\Controllers\QueryList\Filters\WithOrderBy;
 use App\Http\Models\Admin\TypeDetailModel;
 use App\Http\Utils\Errors;
 use App\Http\Utils\Utils;
+use App\Models\Sys\DictionaryModel;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -186,11 +187,15 @@ class QueryController extends Controller implements WithWheres
                     $this->sql = $this->sql->orderBy($key, $value);
                 }
             }
+        } else {
+            //默认时间倒序
+            $this->sql = $this->sql->orderBy('created_at', 'desc');
         }
     }
 
     //处理字典
-    private function dic() {
+    protected function dic($data = []) {
+        $this->data = !empty($data) ? $data : $this->data;
         foreach ($this->data as $data) {
             if (property_exists($this, 'dicArr')) {
                 foreach ($this->dicArr as $col => $dic) {
@@ -198,7 +203,7 @@ class QueryController extends Controller implements WithWheres
                         if (empty($data->$col) && $data->$col != 0) {
                             $data->$col = ['code' => '000000', 'name' => $data->$col];
                         } else {
-                            $dics = TypeDetailModel::getDetailsByCode($dic);
+                            $dics = DictionaryModel::getDetailsByCode($dic);
                             if (array_key_exists($data->$col, $dics)) {
                                 $data->$col = $dics[$data->$col];
                             } else {

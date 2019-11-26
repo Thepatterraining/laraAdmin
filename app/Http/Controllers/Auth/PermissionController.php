@@ -14,7 +14,9 @@ class PermissionController extends QueryController
      * 字典数组
      * ['表里的字段名' => '字典code',...]
      */
-    protected $dicArr = [];
+    protected $dicArr = [
+        'type' => 'permission_type'
+    ];
 
     /**
      * 字段映射 可选，不填默认转成下划线格式
@@ -43,11 +45,15 @@ class PermissionController extends QueryController
     public function getList(Request $request){
         try{
             $where = [
-                'type' => 'menu',
-                'parent_id' => 0,
+                // 'type' => 'menu',
+                // 'parent_id' => 0,
             ];
             $datas = PermissionModel::where($where)->get();
-            $datas = $this->transTree($datas);
+            $this->dic($datas);
+            // dd($datas);
+            $datas = $this->transTree2($datas);
+
+            // dd($datas);
             return $this->success(['data'=>$datas]);
         } catch (Exception $ex) {
 
@@ -68,6 +74,21 @@ class PermissionController extends QueryController
             }
         }
         return $tree;
+    }
+
+    public function transTree2($tree, $pid = 0) {
+        $children = [];
+        foreach ($tree as $data) {
+            if ($data->parent_id == $pid) {
+                // dump($data);
+                $children[] = $data;
+                $childrens = $this->transTree2($tree, $data->id);
+                if (!empty($childrens)) {
+                    $data->children = $childrens;
+                }
+            }
+        }
+        return $children;
     }
 
     /**

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\QueryList\QueryController;
 use App\Exceptions\CommonException;
 use App\Models\Auth\UserModel;
+use App\Models\Auth\UserRoleModel;
 use App\Models\Sys\ErrorModel;
 
 class UserController extends QueryController
@@ -44,8 +45,15 @@ class UserController extends QueryController
         try{
             //检查页码，搜索条件等
             $this->pageValid();
+
+            $list = $this->pageList();
+            foreach ($list['data'] as $data) {
+                //查询角色
+                $data->roleIds = UserRoleModel::whereUserId($data->id)->pluck('role_id');
+            }
+
             //返回数据
-            return $this->success($this->pageList());
+            return $this->success($list);
         } catch (Exception $ex) {
 
         }
@@ -56,7 +64,7 @@ class UserController extends QueryController
      * 更新
      * @route put.api/info/{id}
      */
-    function updateInfo(Request $request, $id) {
+    function updateInfo(Request $request, $id, UserRoleModel $userRoleModel) {
         try{
             //查询记录
             $detail = $this->getModel()->find($id);
@@ -65,7 +73,11 @@ class UserController extends QueryController
                 throw new CommonException(ErrorModel::USER_NOT_FOUND);
             }
             //更新
-            $this->update($id,$request->all());
+            if ($request->has('roleIds')) {
+                //选择了角色，插入角色信息
+                $userRoleModel->add($id, $request->roleIds);
+            }
+            $this->update($id,$request->all(),['roleIds']);
             return $this->success(true);
         }catch(Exception $ex) {
 
